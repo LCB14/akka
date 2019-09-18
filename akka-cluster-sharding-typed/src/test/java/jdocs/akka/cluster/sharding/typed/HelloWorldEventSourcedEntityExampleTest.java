@@ -47,9 +47,9 @@ public class HelloWorldEventSourcedEntityExampleTest extends JUnitSuite {
 
       ClusterSharding sharding = ClusterSharding.get(testKit.system());
       sharding.init(
-          Entity.ofEventSourcedEntity(
+          Entity.of(
               HelloWorld.ENTITY_TYPE_KEY,
-              ctx -> new HelloWorld(ctx.getActorContext(), ctx.getEntityId())));
+              ctx -> HelloWorld.create(ctx.getEntityId(), ctx.getPersistenceIdProposal())));
       _sharding = sharding;
     }
     return _sharding;

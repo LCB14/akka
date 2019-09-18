@@ -43,7 +43,10 @@ class AccountExampleSpec
     super.beforeAll()
     Cluster(system).manager ! Join(Cluster(system).selfMember.address)
 
-    sharding.init(Entity(AccountEntity.TypeKey, ctx => AccountEntity(ctx.entityId)))
+    sharding.init(
+      Entity(
+        AccountEntity.TypeKey,
+        entityContext => AccountEntity(entityContext.entityId, entityContext.persistenceIdProposal)))
   }
 
   "Account example" must {

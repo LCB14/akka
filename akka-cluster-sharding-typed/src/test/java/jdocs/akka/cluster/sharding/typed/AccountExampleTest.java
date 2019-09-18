@@ -54,8 +54,11 @@ public class AccountExampleTest extends JUnitSuite {
 
       ClusterSharding sharding = ClusterSharding.get(testKit.system());
       sharding.init(
-          Entity.ofEventSourcedEntityWithEnforcedReplies(
-              AccountEntity.ENTITY_TYPE_KEY, ctx -> AccountEntity.create(ctx.getEntityId())));
+          Entity.of(
+              AccountEntity.ENTITY_TYPE_KEY,
+              entityContext ->
+                  AccountEntity.create(
+                      entityContext.getEntityId(), entityContext.getPersistenceIdProposal())));
       _sharding = sharding;
     }
     return _sharding;

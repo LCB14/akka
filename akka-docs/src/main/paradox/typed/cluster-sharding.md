@@ -68,11 +68,6 @@ Scala
 Java
 :  @@snip [HelloWorldPersistentEntityExample.java](/akka-cluster-sharding-typed/src/test/java/jdocs/akka/cluster/sharding/typed/HelloWorldPersistentEntityExample.java) { #persistent-entity-import #persistent-entity }
 
-Note that `EventSourcedEntity` is used in this example. Any `Behavior` can be used as a sharded entity actor,
-but the combination of sharding and persistent actors is very common and therefore the `EventSourcedEntity`
-@scala[factory]@java[class] is provided as convenience. It selects the `persistenceId` automatically from
-the `EntityTypeKey` and `entityId` @java[constructor] parameters by using `EntityTypeKey.persistenceIdFrom`.
-
 To initialize and use the entity:
 
 Scala
@@ -80,6 +75,12 @@ Scala
 
 Java
 :  @@snip [HelloWorldPersistentEntityExample.java](/akka-cluster-sharding-typed/src/test/java/jdocs/akka/cluster/sharding/typed/HelloWorldPersistentEntityExample.java) { #persistent-entity-usage-import #persistent-entity-usage }
+
+Cluster Sharding is often used together with `EventSourcedBehavior` for the entities. To make that combination
+convenient to use the `EntityContext` has a `persistenceIdProposal` which can be used as the `PersistenceId`
+of the `EventSourcedBehavior`. It is constructed from the `name` of the `EntityTypeKey` and the `entityId`
+by concatenating them with `|` separator, or the separator that was defined by `EntityTypeKey.withEntityIdSeparator`.
+It's not mandatory to use exactly this `PersistenceId`.
 
 Sending messages to persistent entities is the same as if the entity wasn't persistent. The only difference is
 when an entity is moved the state will be restored. In the above example @ref:[ask](interaction-patterns.md#outside-ask)

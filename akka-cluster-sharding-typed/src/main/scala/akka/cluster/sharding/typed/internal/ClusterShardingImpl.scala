@@ -170,9 +170,7 @@ import akka.util.Timeout
     init(
       new scaladsl.Entity(
         createBehavior = (ctx: EntityContext) =>
-          Behaviors.setup[M] { actorContext =>
-            entity.createBehavior(new javadsl.EntityContext[M](ctx.entityId, ctx.shard, actorContext.asJava))
-          },
+          entity.createBehavior(new javadsl.EntityContext[M](ctx.entityId, ctx.persistenceIdProposal, ctx.shard)),
         typeKey = entity.typeKey.asScala,
         stopMessage = entity.stopMessage.asScala,
         entityProps = entity.entityProps,
@@ -229,7 +227,7 @@ import akka.util.Timeout
         }
 
         val classicEntityPropsFactory: String => akka.actor.Props = { entityId =>
-          val behv = behavior(new EntityContext(entityId, shardCommandDelegator))
+          val behv = behavior(new EntityContext(entityId, typeKey.persistenceIdFrom(entityId), shardCommandDelegator))
           PropsAdapter(poisonPillInterceptor(behv), entityProps)
         }
         classicSharding.internalStart(

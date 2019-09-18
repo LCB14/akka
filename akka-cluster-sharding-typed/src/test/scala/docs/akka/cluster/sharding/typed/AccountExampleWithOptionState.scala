@@ -7,10 +7,10 @@ package docs.akka.cluster.sharding.typed
 import akka.actor.typed.ActorRef
 import akka.actor.typed.Behavior
 import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
-import akka.cluster.sharding.typed.scaladsl.EventSourcedEntity
 import akka.persistence.typed.ExpectingReply
+import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.Effect
-import akka.serialization.jackson.CborSerializable
+import akka.persistence.typed.scaladsl.EventSourcedBehavior
 import akka.serialization.jackson.CborSerializable
 
 /**
@@ -119,10 +119,9 @@ object AccountExampleWithOptionState {
     val TypeKey: EntityTypeKey[Command[_]] =
       EntityTypeKey[Command[_]]("Account")
 
-    def apply(accountNumber: String): Behavior[Command[_]] = {
-      EventSourcedEntity.withEnforcedReplies[Command[_], Event, Option[Account]](
-        TypeKey,
-        accountNumber,
+    def apply(persistenceId: PersistenceId): Behavior[Command[_]] = {
+      EventSourcedBehavior.withEnforcedReplies[Command[_], Event, Option[Account]](
+        persistenceId,
         None,
         (state, cmd) =>
           state match {

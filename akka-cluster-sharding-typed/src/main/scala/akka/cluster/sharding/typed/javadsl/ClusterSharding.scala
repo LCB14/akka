@@ -15,7 +15,6 @@ import akka.actor.typed.Behavior
 import akka.actor.typed.RecipientRef
 import akka.actor.typed.Props
 import akka.actor.typed.internal.InternalRecipientRef
-import akka.actor.typed.javadsl.ActorContext
 import akka.annotation.DoNotInherit
 import akka.annotation.InternalApi
 import akka.cluster.sharding.ShardCoordinator.ShardAllocationStrategy
@@ -207,9 +206,6 @@ object Entity {
    * Defines how the entity should be created. Used in [[ClusterSharding#init]]. More optional
    * settings can be defined using the `with` methods of the returned [[Entity]].
    *
-   * Any [[Behavior]] can be used as a sharded entity actor, but the combination of sharding and persistent actors
-   * is very common and therefore the [[Entity.ofEventSourcedEntity]] is provided as convenience.
-   *
    * @param typeKey A key that uniquely identifies the type of entity in this cluster
    * @param createBehavior Create the behavior for an entity given a [[EntityContext]] (includes entityId)
    * @tparam M The type of message the entity accepts
@@ -225,71 +221,6 @@ object Entity {
       Optional.empty(),
       Optional.empty(),
       Optional.empty())
-  }
-
-  /**
-   * Defines how the [[EventSourcedEntity]] should be created. Used in [[ClusterSharding#init]]. Any [[Behavior]] can
-   * be used as a sharded entity actor, but the combination of sharding and persistent actors is very common
-   * and therefore this factory is provided as convenience.
-   *
-   * More optional settings can be defined using the `with` methods of the returned [[Entity]].
-   *
-   * @param typeKey A key that uniquely identifies the type of entity in this cluster
-   * @param createPersistentEntity Create the `PersistentEntity` for an entity given a [[EntityContext]] (includes entityId)
-   * @tparam Command The type of message the entity accepts
-   */
-  def ofEventSourcedEntity[Command, Event, State](
-      typeKey: EntityTypeKey[Command],
-      createPersistentEntity: JFunction[EntityContext[Command], EventSourcedEntity[Command, Event, State]])
-      : Entity[Command, ShardingEnvelope[Command]] = {
-
-    of(
-      typeKey,
-      new JFunction[EntityContext[Command], Behavior[Command]] {
-        override def apply(ctx: EntityContext[Command]): Behavior[Command] = {
-          val persistentEntity = createPersistentEntity(ctx)
-          if (persistentEntity.entityTypeKey != typeKey)
-            throw new IllegalArgumentException(
-              s"The [${persistentEntity.entityTypeKey}] of the PersistentEntity " +
-              s" [${persistentEntity.getClass.getName}] doesn't match expected $typeKey.")
-          persistentEntity
-        }
-      })
-  }
-
-  /**
-   * Defines how the [[EventSourcedEntityWithEnforcedReplies]] should be created. Used in [[ClusterSharding#init]]. Any [[Behavior]] can
-   * be used as a sharded entity actor, but the combination of sharding and persistent actors is very common
-   * and therefore this factory is provided as convenience.
-   *
-   * A [[EventSourcedEntityWithEnforcedReplies]] enforces that replies to commands are not forgotten.
-   * There will be compilation errors if the returned effect isn't a [[akka.persistence.typed.javadsl.ReplyEffect]], which can be
-   * created with `Effects().reply`, `Effects().noReply`, [[akka.persistence.typed.javadsl.Effect.thenReply]], or [[akka.persistence.typed.javadsl.Effect.thenNoReply]].
-   *
-   * More optional settings can be defined using the `with` methods of the returned [[Entity]].
-   *
-   * @param typeKey A key that uniquely identifies the type of entity in this cluster
-   * @param createPersistentEntity Create the `PersistentEntity` for an entity given a [[EntityContext]] (includes entityId)
-   * @tparam Command The type of message the entity accepts
-   */
-  def ofEventSourcedEntityWithEnforcedReplies[Command, Event, State](
-      typeKey: EntityTypeKey[Command],
-      createPersistentEntity: JFunction[
-        EntityContext[Command],
-        EventSourcedEntityWithEnforcedReplies[Command, Event, State]]): Entity[Command, ShardingEnvelope[Command]] = {
-
-    of(
-      typeKey,
-      new JFunction[EntityContext[Command], Behavior[Command]] {
-        override def apply(ctx: EntityContext[Command]): Behavior[Command] = {
-          val persistentEntity = createPersistentEntity(ctx)
-          if (persistentEntity.entityTypeKey != typeKey)
-            throw new IllegalArgumentException(
-              s"The [${persistentEntity.entityTypeKey}] of the PersistentEntity " +
-              s" [${persistentEntity.getClass.getName}] doesn't match expected $typeKey.")
-          persistentEntity
-        }
-      })
   }
 
 }
@@ -365,18 +296,30 @@ final class Entity[M, E] private (
 }
 
 /**
- * Parameter to [[Entity.of]]
+ * Parameter to `createBehavior` function in [[Entity.of]].
+ *
+ * Cluster Sharding is often used together with [[akka.persistence.typed.javadsl.EventSourcedBehavior]]
+ * for the entities. To make that combination convenient to use the `EntityContext` has a `persistenceIdProposal`
+ * which can be used as the [[PersistenceId]] of the `EventSourcedBehavior`. It is constructed from the `name`
+ * of the [[EntityTypeKey]] and the `entityId` by concatenating them with `|` separator, or the separator that was
+ * defined by [[EntityTypeKey#withEntityIdSeparator]]. It's not mandatory to use exactly this `PersistenceId`.
+ * If `EventSourcedBehavior` isn't used the `persistenceIdProposal` can be ignored.
+ *
+ * @param entityId the business domain identifier of the entity
+ * @param persistenceIdProposal suggestion of [[PersistenceId]] to be used with an
+ *                              [[akka.persistence.typed.javadsl.EventSourcedBehavior]]
  */
 final class EntityContext[M](
     entityId: String,
-    shard: ActorRef[ClusterSharding.ShardCommand],
-    actorContext: ActorContext[M]) {
+    persistenceIdProposal: PersistenceId,
+    shard: ActorRef[ClusterSharding.ShardCommand]) {
 
   def getEntityId: String = entityId
 
+  def getPersistenceIdProposal: PersistenceId = persistenceIdProposal
+
   def getShard: ActorRef[ClusterSharding.ShardCommand] = shard
 
-  def getActorContext: ActorContext[M] = actorContext
 }
 
 @silent // for unused msgClass to make class type explicit in the Java API. Not using @unused as the user is likely to see it

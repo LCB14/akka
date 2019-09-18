@@ -70,7 +70,10 @@ object ShardingCompileOnlySpec {
     //#persistence
     val BlogTypeKey = EntityTypeKey[Command]("BlogPost")
 
-    ClusterSharding(system).init(Entity(typeKey = BlogTypeKey, createBehavior = ctx => BlogPostEntity(ctx.entityId)))
+    ClusterSharding(system).init(
+      Entity(
+        typeKey = BlogTypeKey,
+        createBehavior = entityContext => BlogPostEntity(entityContext.entityId, entityContext.persistenceIdProposal)))
     //#persistence
 
   }

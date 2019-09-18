@@ -212,10 +212,6 @@ object Entity {
    * Defines how the entity should be created. Used in [[ClusterSharding#init]]. More optional
    * settings can be defined using the `with` methods of the returned [[Entity]].
    *
-   * Any [[Behavior]] can be used as a sharded entity actor, but the combination of sharding and persistent actors
-   * is very common and therefore [[EventSourcedEntity]] is provided as a convenience for creating such
-   * `EventSourcedBehavior`.
-   *
    * @param typeKey A key that uniquely identifies the type of entity in this cluster
    * @param createBehavior Create the behavior for an entity given a [[EntityContext]] (includes entityId)
    * @tparam M The type of message the entity accepts
@@ -290,9 +286,23 @@ final class Entity[M, E] private[akka] (
 }
 
 /**
- * Parameter to [[Entity.apply]]
+ * Parameter to `createBehavior` function in [[Entity.apply]].
+ *
+ * Cluster Sharding is often used together with [[akka.persistence.typed.scaladsl.EventSourcedBehavior]]
+ * for the entities. To make that combination convenient to use the `EntityContext` has a `persistenceIdProposal`
+ * which can be used as the [[PersistenceId]] of the `EventSourcedBehavior`. It is constructed from the `name`
+ * of the [[EntityTypeKey]] and the `entityId` by concatenating them with `|` separator, or the separator that was
+ * defined by [[EntityTypeKey.withEntityIdSeparator]]. It's not mandatory to use exactly this `PersistenceId`.
+ * If `EventSourcedBehavior` isn't used the `persistenceIdProposal` can be ignored.
+ *
+ * @param entityId the business domain identifier of the entity
+ * @param persistenceIdProposal suggestion of [[PersistenceId]] to be used with an
+ *                              [[akka.persistence.typed.scaladsl.EventSourcedBehavior]]
  */
-final class EntityContext(val entityId: String, val shard: ActorRef[ClusterSharding.ShardCommand])
+final class EntityContext(
+    val entityId: String,
+    val persistenceIdProposal: PersistenceId,
+    val shard: ActorRef[ClusterSharding.ShardCommand])
 
 /** Allows starting a specific Sharded Entity by its entity identifier */
 object StartEntity {

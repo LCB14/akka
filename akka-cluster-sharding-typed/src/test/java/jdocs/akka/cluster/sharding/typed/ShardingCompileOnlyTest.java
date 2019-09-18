@@ -204,7 +204,12 @@ interface ShardingCompileOnlyTest {
     EntityTypeKey<BlogPostEntity.Command> blogTypeKey =
         EntityTypeKey.create(BlogPostEntity.Command.class, "BlogPost");
 
-    sharding.init(Entity.of(blogTypeKey, ctx -> BlogPostEntity.create(ctx.getEntityId())));
+    sharding.init(
+        Entity.of(
+            blogTypeKey,
+            entityContext ->
+                BlogPostEntity.create(
+                    entityContext.getEntityId(), entityContext.getPersistenceIdProposal())));
     // #persistence
   }
 }
