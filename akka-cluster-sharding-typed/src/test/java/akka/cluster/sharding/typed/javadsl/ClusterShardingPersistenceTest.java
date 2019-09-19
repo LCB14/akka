@@ -17,7 +17,6 @@ import akka.persistence.typed.javadsl.CommandHandler;
 import akka.persistence.typed.javadsl.Effect;
 import akka.persistence.typed.javadsl.EventHandler;
 import akka.persistence.typed.javadsl.EventSourcedBehavior;
-import akka.util.Timeout;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.junit.ClassRule;
@@ -140,7 +139,9 @@ public class ClusterShardingPersistenceTest extends JUnitSuite {
               TestPersistentEntity.ENTITY_TYPE_KEY,
               entityContext ->
                   new TestPersistentEntity(
-                      entityContext.getEntityId(), entityContext.getPersistenceIdProposal())));
+                      entityContext.getEntityId(),
+                      PersistenceId.of(
+                          entityContext.getEntityTypeKey().name(), entityContext.getEntityId()))));
 
       _sharding = sharding;
     }

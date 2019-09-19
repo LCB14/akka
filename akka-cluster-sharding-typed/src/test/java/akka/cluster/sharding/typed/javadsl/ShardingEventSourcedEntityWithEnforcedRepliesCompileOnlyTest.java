@@ -94,6 +94,8 @@ public class ShardingEventSourcedEntityWithEnforcedRepliesCompileOnlyTest {
             TestPersistentEntityWithEnforcedReplies.ENTITY_TYPE_KEY,
             entityContext ->
                 TestPersistentEntityWithEnforcedReplies.create(
-                    entityContext.getEntityId(), entityContext.getPersistenceIdProposal())));
+                    entityContext.getEntityId(),
+                    PersistenceId.of(
+                        entityContext.getEntityTypeKey().name(), entityContext.getEntityId()))));
   }
 }

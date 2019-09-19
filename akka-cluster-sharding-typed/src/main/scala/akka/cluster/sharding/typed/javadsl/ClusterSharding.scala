@@ -20,7 +20,6 @@ import akka.annotation.InternalApi
 import akka.cluster.sharding.ShardCoordinator.ShardAllocationStrategy
 import akka.cluster.sharding.typed.internal.EntityTypeKeyImpl
 import akka.japi.function.{ Function => JFunction }
-import akka.persistence.typed.PersistenceId
 import com.github.ghik.silencer.silent
 
 @FunctionalInterface
@@ -299,24 +298,23 @@ final class Entity[M, E] private (
  * Parameter to `createBehavior` function in [[Entity.of]].
  *
  * Cluster Sharding is often used together with [[akka.persistence.typed.javadsl.EventSourcedBehavior]]
- * for the entities. To make that combination convenient to use the `EntityContext` has a `persistenceIdProposal`
- * which can be used as the [[PersistenceId]] of the `EventSourcedBehavior`. It is constructed from the `name`
- * of the [[EntityTypeKey]] and the `entityId` by concatenating them with `|` separator, or the separator that was
- * defined by [[EntityTypeKey#withEntityIdSeparator]]. It's not mandatory to use exactly this `PersistenceId`.
- * If `EventSourcedBehavior` isn't used the `persistenceIdProposal` can be ignored.
+ * for the entities. See more considerations in [[akka.persistence.typed.PersistenceId]].
+ * The `PersistenceId` of the `EventSourcedBehavior` can typically be constructed with:
+ * {{{
+ * PersistenceId.of(entityContext.getEntityTypeKey().name(), entityContext.getEntityId())
+ * }}}
  *
+ * @param entityTypeKey the key of the entity type
  * @param entityId the business domain identifier of the entity
- * @param persistenceIdProposal suggestion of [[PersistenceId]] to be used with an
- *                              [[akka.persistence.typed.javadsl.EventSourcedBehavior]]
  */
 final class EntityContext[M](
+    entityTypeKey: EntityTypeKey[M],
     entityId: String,
-    persistenceIdProposal: PersistenceId,
     shard: ActorRef[ClusterSharding.ShardCommand]) {
 
-  def getEntityId: String = entityId
+  def getEntityTypeKey: EntityTypeKey[M] = entityTypeKey
 
-  def getPersistenceIdProposal: PersistenceId = persistenceIdProposal
+  def getEntityId: String = entityId
 
   def getShard: ActorRef[ClusterSharding.ShardCommand] = shard
 
@@ -350,26 +348,6 @@ object StartEntity {
    * INTERNAL API
    */
   @InternalApi private[akka] def asScala: scaladsl.EntityTypeKey[T] = scaladslSelf
-
-  /**
-   * Constructs a [[PersistenceId]] from this `EntityTypeKey` and the given `entityId` by
-   * concatenating them with `|` separator.
-   *
-   * The `|` separator is also used in Lagom's `scaladsl.PersistentEntity` but no separator is used
-   * in Lagom's `javadsl.PersistentEntity`. For compatibility with Lagom's `javadsl.PersistentEntity`
-   * you should use `""` as the separator in [[EntityTypeKey.withEntityIdSeparator]].
-   */
-  def persistenceIdFrom(entityId: String): PersistenceId
-
-  /**
-   * Specify a custom separator for compatibility with old naming conventions. The separator is used between the
-   * `EntityTypeKey` and the `entityId` when constructing a `persistenceId` with [[EntityTypeKey.persistenceIdFrom]].
-   *
-   * The default `|` separator is also used in Lagom's `scaladsl.PersistentEntity` but no separator is used
-   * in Lagom's `javadsl.PersistentEntity`. For compatibility with Lagom's `javadsl.PersistentEntity`
-   * you should use `""` as the separator here.
-   */
-  def withEntityIdSeparator(separator: String): EntityTypeKey[T]
 
 }
 

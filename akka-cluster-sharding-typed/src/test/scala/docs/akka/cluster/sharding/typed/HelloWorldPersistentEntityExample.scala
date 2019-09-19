@@ -27,10 +27,9 @@ object HelloWorldPersistentEntityExample {
     private val sharding = ClusterSharding(system)
 
     // registration at startup
-    sharding.init(
-      Entity(
-        typeKey = HelloWorld.TypeKey,
-        createBehavior = entityContext => HelloWorld(entityContext.entityId, entityContext.persistenceIdProposal)))
+    sharding.init(Entity(typeKey = HelloWorld.TypeKey) { entityContext =>
+      HelloWorld(entityContext.entityId, PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId))
+    })
 
     private implicit val askTimeout: Timeout = Timeout(5.seconds)
 

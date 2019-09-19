@@ -53,7 +53,9 @@ public class HelloWorldPersistentEntityExample {
               HelloWorld.ENTITY_TYPE_KEY,
               entityContext ->
                   HelloWorld.create(
-                      entityContext.getEntityId(), entityContext.getPersistenceIdProposal())));
+                      entityContext.getEntityId(),
+                      PersistenceId.of(
+                          entityContext.getEntityTypeKey().name(), entityContext.getEntityId()))));
     }
 
     // usage example

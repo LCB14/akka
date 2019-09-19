@@ -13,6 +13,7 @@ import akka.cluster.sharding.typed.javadsl.Entity;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
 import akka.cluster.typed.Cluster;
 import akka.cluster.typed.Join;
+import akka.persistence.typed.PersistenceId;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.junit.ClassRule;
@@ -58,7 +59,9 @@ public class AccountExampleTest extends JUnitSuite {
               AccountEntity.ENTITY_TYPE_KEY,
               entityContext ->
                   AccountEntity.create(
-                      entityContext.getEntityId(), entityContext.getPersistenceIdProposal())));
+                      entityContext.getEntityId(),
+                      PersistenceId.of(
+                          entityContext.getEntityTypeKey().name(), entityContext.getEntityId()))));
       _sharding = sharding;
     }
     return _sharding;

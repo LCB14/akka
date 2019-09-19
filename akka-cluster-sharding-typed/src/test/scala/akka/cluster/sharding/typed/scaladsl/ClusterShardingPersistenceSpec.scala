@@ -30,6 +30,7 @@ import akka.cluster.sharding.{ ClusterSharding => ClassicClusterSharding }
 import akka.cluster.typed.Cluster
 import akka.cluster.typed.Join
 import akka.persistence.typed.ExpectingReply
+import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.RecoveryCompleted
 import akka.persistence.typed.scaladsl.Effect
 import akka.persistence.typed.scaladsl.EventSourcedBehavior
@@ -85,7 +86,7 @@ object ClusterShardingPersistenceSpec {
       var stashing = false
 
       EventSourcedBehavior[Command, String, String](
-        TypeKey.persistenceIdFrom(entityId),
+        PersistenceId(TypeKey.name, entityId),
         emptyState = "",
         commandHandler = (state, cmd) =>
           cmd match {
@@ -178,7 +179,7 @@ class ClusterShardingPersistenceSpec
 
   "Typed cluster sharding with persistent actor" must {
 
-    ClusterSharding(system).init(Entity(TypeKey, ctx => persistentEntity(ctx.entityId, ctx.shard)))
+    ClusterSharding(system).init(Entity(TypeKey)(ctx => persistentEntity(ctx.entityId, ctx.shard)))
 
     Cluster(system).manager ! Join(Cluster(system).selfMember.address)
 

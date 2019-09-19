@@ -495,7 +495,10 @@ made before finalizing the APIs. Compared to Akka 2.5.x the source incompatible 
 * `ReplicationDeleteFailure` renamed to `DeleteFailure`.
 * `EventSourcedEntity` removed in favor using plain `EventSourcedBehavior` because the alternative way was
   causing more confusion than adding value. Construction of `PersistentId` for the `EventSourcedBehavior` is
-  facilitated by `persistenceIdSuggestion` in `EntityContext`.
+  facilitated by factory methods in `PersistenceId`.
+* `akka.cluster.sharding.typed.scaladsl.Entity.apply` changed to use two parameter lists because the new
+  `EntityContext.entityTypeKey` required additional type parameter that is inferred better with a secondary
+  parameter list.
 
 #### Akka Typed Stream API changes
 

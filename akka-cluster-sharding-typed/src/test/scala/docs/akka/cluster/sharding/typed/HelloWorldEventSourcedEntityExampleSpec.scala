@@ -10,6 +10,7 @@ import akka.cluster.sharding.typed.scaladsl.ClusterSharding
 import akka.cluster.sharding.typed.scaladsl.Entity
 import akka.cluster.typed.Cluster
 import akka.cluster.typed.Join
+import akka.persistence.typed.PersistenceId
 import com.typesafe.config.ConfigFactory
 import org.scalatest.WordSpecLike
 
@@ -39,10 +40,9 @@ class HelloWorldEventSourcedEntityExampleSpec
     super.beforeAll()
     Cluster(system).manager ! Join(Cluster(system).selfMember.address)
 
-    sharding.init(
-      Entity(
-        HelloWorld.TypeKey,
-        entityContext => HelloWorld(entityContext.entityId, entityContext.persistenceIdProposal)))
+    sharding.init(Entity(HelloWorld.TypeKey) { entityContext =>
+      HelloWorld(entityContext.entityId, PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId))
+    })
   }
 
   "HelloWorld example" must {
