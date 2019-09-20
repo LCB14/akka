@@ -16,11 +16,11 @@ class PersistenceIdSpec extends WordSpec with Matchers with LogCapturing {
     }
 
     "support custom separator for compatibility with Lagom's javadsl" in {
-      PersistenceId("MyType", "", "abc") should ===(PersistenceId("MyTypeabc"))
+      PersistenceId("MyType", "abc", "") should ===(PersistenceId("MyTypeabc"))
     }
 
     "support custom entityIdSeparator for compatibility with other naming" in {
-      PersistenceId("MyType", "#/#", "abc") should ===(PersistenceId("MyType#/#abc"))
+      PersistenceId("MyType", "abc", "#/#") should ===(PersistenceId("MyType#/#abc"))
     }
 
     "not allow | in entityTypeName because it's the default separator" in {
@@ -31,7 +31,7 @@ class PersistenceIdSpec extends WordSpec with Matchers with LogCapturing {
 
     "not allow custom separator in entityTypeName" in {
       intercept[IllegalArgumentException] {
-        PersistenceId("Invalid name", " ", "abc")
+        PersistenceId("Invalid name", "abc", " ")
       }
     }
 
@@ -43,7 +43,7 @@ class PersistenceIdSpec extends WordSpec with Matchers with LogCapturing {
 
     "not allow custom separator in entityId" in {
       intercept[IllegalArgumentException] {
-        PersistenceId("SomeType", "#", "A#B")
+        PersistenceId("SomeType", "A#B", "#")
       }
     }
   }

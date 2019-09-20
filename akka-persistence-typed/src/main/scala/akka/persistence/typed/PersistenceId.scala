@@ -35,7 +35,7 @@ object PersistenceId {
    * @throws IllegalArgumentException if the `entityTypeHint` or `entityId` contains `|`
    */
   def apply(entityTypeHint: String, entityId: String): PersistenceId =
-    apply(entityTypeHint, DefaultSeparator, entityId)
+    apply(entityTypeHint, entityId, DefaultSeparator)
 
   /**
    * Constructs a [[PersistenceId]] from the given `entityTypeHint` and `entityId` by
@@ -58,7 +58,7 @@ object PersistenceId {
    *
    * @throws IllegalArgumentException if the `entityTypeHint` or `entityId` contains `separator`
    */
-  def apply(entityTypeHint: String, separator: String, entityId: String): PersistenceId = {
+  def apply(entityTypeHint: String, entityId: String, separator: String): PersistenceId = {
     if (separator.nonEmpty) {
       if (entityId.contains(separator))
         throw new IllegalArgumentException(s"entityId [$entityId] contains [$separator] which is a reserved character")
@@ -116,8 +116,8 @@ object PersistenceId {
    *
    * @throws IllegalArgumentException if the `entityTypeHint` or `entityId` contains `separator`
    */
-  def of(entityTypeHint: String, separator: String, entityId: String): PersistenceId =
-    apply(entityTypeHint, separator, entityId)
+  def of(entityTypeHint: String, entityId: String, separator: String): PersistenceId =
+    apply(entityTypeHint, entityId, separator)
 
   /**
    * Constructs a [[PersistenceId]] with `id` as the full unique identifier.
